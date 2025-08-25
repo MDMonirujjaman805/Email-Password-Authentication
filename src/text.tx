@@ -1,0 +1,8 @@
+//   {
+//     path: "header",
+//     element: <Header />,
+//   },
+//  {
+//     path: "footer",
+//     element: <Footer />,
+//   },
