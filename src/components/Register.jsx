@@ -1,6 +1,10 @@
 import { NavLink } from "react-router";
 import { auth } from "../firebase.init";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile,
+} from "firebase/auth";
 import { useState } from "react";
 import { MdRemoveRedEye } from "react-icons/md";
 import { BiSolidHide } from "react-icons/bi";
@@ -18,7 +22,10 @@ export default function Register() {
     const email = e.target.email.value;
     const password = e.target.password.value;
     const terms = e.target.terms.checked;
-    console.log(email, password, terms);
+    const name = e.target.name.value;
+    const photo = e.target.photo.value;
+
+    console.log(name, photo, email, password, terms);
 
     // 6 character validetion.
     if (password.length < 6) {
@@ -28,7 +35,7 @@ export default function Register() {
 
     // One upercase,one lowercase,one number,one special character Password validetion.
     const regex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\\[{\]};:'",<.>/?])(?=.{8,20}$)/;
     if (!regex.test(password)) {
       setError(
         "At least one upercase,one lowercase,one number,one special character password."
@@ -42,15 +49,35 @@ export default function Register() {
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((result) => {
-        setSuccess("Account created successfully ✅");
-        console.log("User registered:", result.user);
-      })
-      .catch((error) => {
-        setError(error.message);
-        console.error("Register error:", error.message);
-      });
+    createUserWithEmailAndPassword(auth, email, password).then((result) => {
+      setSuccess("Account created successfully ✅");
+      console.log("User registered:", result.user);
+     
+
+      // Email Varefication
+      sendEmailVerification(auth.currentUser)
+        .then(() => {
+          console.log("sent email varication.");
+        })
+        // update profile name and photo.
+        const profile = {
+          displayName:name,
+          photoURL:photo
+        }
+        updateProfile(auth.currentUser,profile)
+         .then(() => {
+          console.log("Profile Updated!");
+        })
+        .catch((error) => {
+          console.log("profile updated errror",error);
+        })
+
+
+        .catch((error) => {
+          setError(error.message);
+          console.error("Register error:", error.message);
+        });
+    });
   };
 
   return (
@@ -63,6 +90,34 @@ export default function Register() {
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <form onSubmit={handleRegister} className="space-y-6">
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-100">
+              Name
+            </label>
+            <input
+              name="name"
+              type="text"
+              required
+              placeholder="Enter your Name"
+              className="mt-2 block w-full rounded-md bg-white/5 px-3 py-1.5 text-white placeholder-gray-500 focus:outline-indigo-500"
+            />
+          </div>
+
+          {/* photo URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-100">
+              Photo URL
+            </label>
+            <input
+              name="photo"
+              type="text"
+              required
+              placeholder="Enter your Photo URL"
+              className="mt-2 block w-full rounded-md bg-white/5 px-3 py-1.5 text-white placeholder-gray-500 focus:outline-indigo-500"
+            />
+          </div>
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-100">

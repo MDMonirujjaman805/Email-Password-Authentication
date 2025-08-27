@@ -1,20 +1,51 @@
 import { NavLink } from "react-router";
 import { auth } from "../firebase.init";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { useRef, useState } from "react";
 
 export default function SignIn() {
+  const emailRef = useRef();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const handleSignIn = (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+
     const email = e.target.email.value;
     const password = e.target.password.value;
 
     signInWithEmailAndPassword(auth, email, password)
       .then((result) => {
+        setSuccess("Login successful ✅");
         console.log("Signed in:", result.user);
       })
       .catch((error) => {
-        console.error("Error:", error.message);
+        setError(error.message);
+        console.error("Sign Error", error.message);
       });
+  };
+
+  const handleForGotPassword = () => {
+    // console.log("get me email address", emailRef.current.value);
+    const email = emailRef.current.value;
+    if (!email) {
+      console.log("Please Give a valid Email Address.");
+    } else {
+      sendPasswordResetEmail(auth, email)
+        .then(() => {
+          alert("Password Reset Email, Please check your Email.");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log(errorCode, errorMessage);
+        });
+    }
   };
 
   return (
@@ -35,6 +66,7 @@ export default function SignIn() {
             <input
               name="email"
               type="email"
+              ref={emailRef}
               required
               placeholder="Enter your email"
               className="mt-2 block w-full rounded-md bg-white/5 px-3 py-1.5 text-white placeholder-gray-500 focus:outline-indigo-500"
@@ -53,7 +85,18 @@ export default function SignIn() {
               placeholder="Enter your password"
               className="mt-2 block w-full rounded-md bg-white/5 px-3 py-1.5 text-white placeholder-gray-500 focus:outline-indigo-500"
             />
+            <button
+              // to="forgotpassword"
+              onClick={handleForGotPassword}
+              className=" underline cursor-pointer text-xs font-light"
+            >
+              Forgot Password
+            </button>
           </div>
+
+          {/* Error / Success messages */}
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
 
           <button
             type="submit"
